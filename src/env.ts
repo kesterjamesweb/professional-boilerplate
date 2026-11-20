@@ -1,37 +1,79 @@
+
 import * as dotenv from 'dotenv';
 import Joi from 'joi';
 
+// Load environment variables
 dotenv.config();
 
+// Environment variable validation schema
 const envSchema = Joi.object({
-  NODE_ENV: Joi.string()
-    .valid('development', 'production', 'test')
-    .default('development'),
-  PORT: Joi.number().default(3000),
-  DB_HOST: Joi.string().required(),
-  DB_PORT: Joi.number().default(3306),
-  DB_USERNAME: Joi.string().required(),
-  DB_PASSWORD: Joi.string().allow('').optional(),
-  DB_DATABASE: Joi.string().required(),
-  FRONTEND_URL: Joi.string().uri().default('http://localhost:4200')
-}).unknown();
+    NODE_ENV: Joi.string()
+        .valid('development', 'production', 'test')
+        .default('development'),
 
-const { error, value: envVars } = envSchema.validate(process.env);
+    PORT: Joi.number()
+        .default(3000),
+
+    // Database configuration
+    DB_HOST: Joi.string().required(),
+    DB_PORT: Joi.number().default(3306),
+    DB_USERNAME: Joi.string().required(),
+    DB_PASSWORD: Joi.string().required(),
+    DB_DATABASE: Joi.string().required(),
+
+    // Frontend configuration
+    FRONTEND_URL: Joi.string()
+        .uri()
+        .default('http://localhost:4200'),
+
+    // JWT configuration
+    JWT_SECRET: Joi.string()
+        .min(32)
+        .required(),
+
+    JWT_EXPIRES_IN: Joi.string()
+        .default('24h'),
+
+}).unknown(true);
+
+// Validate environment variables
+const { value: env, error } = envSchema.validate(process.env, {
+    abortEarly: false,
+    errors: {
+        label: 'key',
+    },
+});
 
 if (error) {
-  throw new Error(`Config validation error: ${error.message}`);
+    throw new Error(
+        `Environment validation error: ${error.message}`
+    );
 }
 
-export const env = {
-    nodeEnv: envVars.NODE_ENV,
-    isDev: envVars.NODE_ENV === 'development',
-    port: envVars.PORT,
+// Export application configuration
+export const config = {
+    env: env.NODE_ENV,
+    isDev: env.NODE_ENV === 'development',
+    isProd: env.NODE_ENV === 'production',
+    isTest: env.NODE_ENV === 'test',
+
+    port: env.PORT,
+
+    // Database settings
     db: {
-        host: envVars.DB_HOST,
-        port: envVars.DB_PORT,
-        username: envVars.DB_USERNAME,
-        password: envVars.DB_PASSWORD,
-        database: envVars.DB_DATABASE,
+        host: env.DB_HOST,
+        port: env.DB_PORT,
+        username: env.DB_USERNAME,
+        password: env.DB_PASSWORD,
+        database: env.DB_DATABASE,
     },
-    frontendUrl: envVars.FRONTEND_URL,
+
+    // Frontend settings
+    frontendUrl: env.FRONTEND_URL,
+
+    // JWT settings
+    jwt: {
+        secret: env.JWT_SECRET,
+        expiresIn: env.JWT_EXPIRES_IN,
+    },
 };
