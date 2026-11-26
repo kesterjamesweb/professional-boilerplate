@@ -1,61 +1,63 @@
 export class AppError extends Error {
-    public readonly statusCode: number;
-    public readonly errorCode: string;
-    public readonly isOperational: boolean;
+  public readonly statusCode: number;
+  public readonly errorCode: string;
+  public readonly isOperational: boolean;
 
-    constructor(
-        message: string,
-        statusCode: number,
-        errorCode: string,
-        isOperational = true
-    ) {
-        super(message);
-        this.statusCode = statusCode;
-        this.errorCode = errorCode;
-        this.isOperational = isOperational;
-        
-        Error.captureStackTrace(this, this.constructor);
-        Object.setPrototypeOf(this, new.target.prototype);
-    }
+  constructor(
+    message: string,
+    statusCode: number,
+    errorCode: string,
+    isOperational = true
+  ) {
+    super(message);
+    this.statusCode = statusCode;
+    this.errorCode = errorCode;
+    this.isOperational = isOperational;
+
+    Error.captureStackTrace(this, this.constructor);
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
 }
 
-export class NotFoundError extends AppError {
-    constructor(resource: string, id?: string | number) {
-        const message = id 
-            ? `${resource} with ID idnotfound`:`{resource} not found`;
-        super(message, 404, 'NOT_FOUND');
-    }
-}
-
-export class ValidationError extends AppError {
-    public readonly details: any;
-
-    constructor(message: string, details?: any) {
-        super(message, 400, 'VALIDATION_ERROR');
-        this.details = details;
-    }
+export class BadRequestError extends AppError {
+  constructor(message = 'Bad Request', errorCode = 'BAD_REQUEST') {
+    super(message, 400, errorCode);
+  }
 }
 
 export class UnauthorizedError extends AppError {
-    constructor(message = 'Authentication required') {
-        super(message, 401, 'UNAUTHORIZED');
-    }
+  constructor(message = 'Unauthorized', errorCode = 'UNAUTHORIZED') {
+    super(message, 401, errorCode);
+  }
 }
 
-export class ForbiddenError extends AppError {
-    constructor(message = 'You do not have permission to perform this action') {
-        super(message, 403, 'FORBIDDEN');
-    }
+export class NotFoundError extends AppError {
+  constructor(message = 'Resource not found', errorCode = 'NOT_FOUND') {
+    super(message, 404, errorCode);
+  }
 }
 
 export class ConflictError extends AppError {
-    constructor(message: string) {
-        super(message, 409, 'CONFLICT');
-    }
+  constructor(message = 'Resource already exists', errorCode = 'CONFLICT') {
+    super(message, 409, errorCode);
+  }
+}
+
+export class ValidationError extends AppError {
+  public readonly details?: any;
+
+  constructor(
+    message = 'Validation failed',
+    details?: any,
+    errorCode = 'VALIDATION_ERROR'
+  ) {
+    super(message, 400, errorCode);
+    this.details = details;
+  }
 }
 
 export class InternalError extends AppError {
-    constructor(message = 'An unexpected error occurred') {
-        super(message, 500, 'INTERNAL_ERROR', false);
-    }
+  constructor(message = 'Internal Server Error', errorCode = 'INTERNAL_ERROR') {
+    super(message, 500, errorCode, false);
+  }
 }

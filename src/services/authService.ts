@@ -1,4 +1,3 @@
-
 import jwt, { SignOptions, JwtPayload } from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
@@ -54,6 +53,7 @@ export class AuthService {
                 'user.email',
                 'user.name',
                 'user.isActive',
+                'user.isVerified',
             ])
             .addSelect('user.password')
             .where('user.email = :email', { email })
@@ -62,6 +62,14 @@ export class AuthService {
         if (!user) {
             logger.warn('Login attempt with non-existent email', { email });
             throw new UnauthorizedError('Invalid email or password');
+        }
+
+        // Check if email is verified
+        if (!user.isVerified) {
+            logger.warn('Login attempt for unverified account', { email });
+            throw new UnauthorizedError(
+                'Please verify your email address before logging in. Check your inbox for the verification link.'
+            );
         }
 
         // 2. Check account status

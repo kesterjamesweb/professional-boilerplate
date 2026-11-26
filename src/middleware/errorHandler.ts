@@ -1,4 +1,3 @@
-
 import { Request, Response, NextFunction } from 'express';
 import { AppError, ValidationError } from '../utils/errors';
 import { logger } from '../utils/logger';
@@ -20,11 +19,11 @@ export const errorHandler = (
         errorCode = err.errorCode;
         message = err.message;
         isOperational = err.isOperational;
-        
+
         if (err instanceof ValidationError) {
             details = err.details;
         }
-    } 
+    }
     else if (err.name === 'QueryFailedError') {
         statusCode = 400;
         errorCode = 'DATABASE_ERROR';

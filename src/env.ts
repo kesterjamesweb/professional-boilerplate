@@ -1,79 +1,62 @@
-
-import * as dotenv from 'dotenv';
+import dotenv from 'dotenv';
 import Joi from 'joi';
 
-// Load environment variables
 dotenv.config();
 
-// Environment variable validation schema
 const envSchema = Joi.object({
-    NODE_ENV: Joi.string()
-        .valid('development', 'production', 'test')
-        .default('development'),
+  NODE_ENV: Joi.string().valid('development', 'test', 'production').default('development'),
+  PORT: Joi.number().default(3000),
 
-    PORT: Joi.number()
-        .default(3000),
+  // Database config
+  DB_HOST: Joi.string().default('localhost'),
+  DB_PORT: Joi.number().default(3306),
+  DB_USERNAME: Joi.string().default('root'),
+  DB_USER: Joi.string().optional(),
+  DB_PASSWORD: Joi.string().allow('').default(''),
+  DB_DATABASE: Joi.string().default('boilerplate_db'),
+  DB_NAME: Joi.string().optional(),
 
-    // Database configuration
-    DB_HOST: Joi.string().required(),
-    DB_PORT: Joi.number().default(3306),
-    DB_USERNAME: Joi.string().required(),
-    DB_PASSWORD: Joi.string().required(),
-    DB_DATABASE: Joi.string().required(),
+  // JWT config
+  JWT_SECRET: Joi.string().default('your-secret-key'),
+  JWT_EXPIRES_IN: Joi.string().default('1d'),
 
-    // Frontend configuration
-    FRONTEND_URL: Joi.string()
-        .uri()
-        .default('http://localhost:4200'),
+  // Email configuration
+  SMTP_HOST: Joi.string().required(),
+  SMTP_PORT: Joi.number().default(587),
+  SMTP_USER: Joi.string().required(),
+  SMTP_PASS: Joi.string().required(),
+  EMAIL_FROM: Joi.string().email().required(),
+  FRONTEND_URL: Joi.string().default('http://localhost:4200'),
+}).unknown();
 
-    // JWT configuration
-    JWT_SECRET: Joi.string()
-        .min(32)
-        .required(),
-
-    JWT_EXPIRES_IN: Joi.string()
-        .default('24h'),
-
-}).unknown(true);
-
-// Validate environment variables
-const { value: env, error } = envSchema.validate(process.env, {
-    abortEarly: false,
-    errors: {
-        label: 'key',
-    },
-});
+const { error, value: env } = envSchema.validate(process.env);
 
 if (error) {
-    throw new Error(
-        `Environment validation error: ${error.message}`
-    );
+  throw new Error(`Environment validation error: ${error.message}`);
 }
 
-// Export application configuration
 export const config = {
-    env: env.NODE_ENV,
-    isDev: env.NODE_ENV === 'development',
-    isProd: env.NODE_ENV === 'production',
-    isTest: env.NODE_ENV === 'test',
-
-    port: env.PORT,
-
-    // Database settings
-    db: {
-        host: env.DB_HOST,
-        port: env.DB_PORT,
-        username: env.DB_USERNAME,
-        password: env.DB_PASSWORD,
-        database: env.DB_DATABASE,
-    },
-
-    // Frontend settings
-    frontendUrl: env.FRONTEND_URL,
-
-    // JWT settings
-    jwt: {
-        secret: env.JWT_SECRET,
-        expiresIn: env.JWT_EXPIRES_IN,
-    },
+  isDev: env.NODE_ENV === 'development',
+  env: env.NODE_ENV as string,
+  port: env.PORT as number,
+  db: {
+    host: env.DB_HOST as string,
+    port: env.DB_PORT as number,
+    username: (env.DB_USERNAME || env.DB_USER) as string,
+    user: (env.DB_USERNAME || env.DB_USER) as string,
+    password: env.DB_PASSWORD as string,
+    database: (env.DB_DATABASE || env.DB_NAME) as string,
+  },
+  jwt: {
+    secret: env.JWT_SECRET as string,
+    expiresIn: env.JWT_EXPIRES_IN as string,
+  },
+  frontendUrl: env.FRONTEND_URL as string,
+  email: {
+    host: env.SMTP_HOST as string,
+    port: env.SMTP_PORT as number,
+    user: env.SMTP_USER as string,
+    pass: env.SMTP_PASS as string,
+    from: env.EMAIL_FROM as string,
+  },
 };

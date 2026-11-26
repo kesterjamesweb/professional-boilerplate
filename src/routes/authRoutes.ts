@@ -1,21 +1,24 @@
-
 import { Router } from 'express';
 import { AuthController } from '../controllers/authController';
 import { validate } from '../middleware/validate';
 import { loginSchema } from '../dto/auth.dto';
 import { asyncHandler } from '../utils/asyncHandler';
-import { authenticate } from '../middleware/auth';
+import {authenticate } from '../middleware/auth';
+import { verificationRoutes } from './verificationRoutes';
 
 export const authRoutes = Router();
 
-// POST /api/auth/login - Public endpoint
+// Mount verification routes
+authRoutes.use('/', verificationRoutes);
+
+// POST /api/auth/login
 authRoutes.post(
     '/login',
     validate(loginSchema),
     asyncHandler(AuthController.login)
 );
 
-// GET /api/auth/me - Protected endpoint
+// GET /api/auth/me
 authRoutes.get(
     '/me',
     authenticate,
